@@ -95,6 +95,7 @@ def get_currency_data(currency, start_date, end_date=None):
         return
     else:
         df = pd.concat(holder, axis = 0, sort=False) # merging all loaded datasets into a single DataFrame
+        df = df[['time', 'open', 'high', 'low', 'close']]
         df = df[df['time']>=start_time] # removing datapoints earlier than start_time
         df['time'] = pd.to_datetime(df['time'], unit='s')
         
