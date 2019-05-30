@@ -26,11 +26,11 @@ def get_currency_data(currency, start_date, end_date=None):
     
     holder = [] # holder for keeping separate DataFrames
 
-    start_time = int(datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc).timestamp() ) # given start time in UTC
+    start_time = int(datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc).timestamp() ) # given UNIX start time in UTC
     if end_date==None:
-        end_time = int(datetime.timestamp(datetime.now(tz=timezone.utc)-timedelta(hours=1))) # current time in UTC
+        end_time = int(datetime.timestamp(datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0))) # current UNIX time truncated to hour in UTC
     else:
-        end_time = int(datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc).timestamp() ) # given end time in UT     
+        end_time = int(datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc).timestamp() ) # given UNIX end time in UT     
     
     def api_call(currency, end_time): # function for obtaining data from API
         url = 'https://min-api.cryptocompare.com/data/histohour'
