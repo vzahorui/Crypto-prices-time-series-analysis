@@ -11,7 +11,7 @@ In order to use it one has to register and generate personal token which will be
 import os
 import glob
 import requests
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 import pandas as pd
 
@@ -28,7 +28,7 @@ def get_currency_data(currency, start_date, end_date=None):
 
     start_time = int(datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc).timestamp() ) # given UNIX start time in UTC
     if end_date==None:
-        end_time = int(datetime.timestamp(datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0))) # current UNIX time truncated to hour in UTC
+        end_time = int(datetime.now(tz=timezone.utc).timestamp()) # current UNIX time truncated to hour in UTC
     else:
         end_time = int(datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc).timestamp() ) # given UNIX end time in UT     
     
@@ -51,8 +51,8 @@ def get_currency_data(currency, start_date, end_date=None):
         avail_starttime = int(datetime.strptime(avail_startdate, '%Y-%m-%d-%H').replace(tzinfo=timezone.utc).timestamp() ) # UNIX timestamp for available start time in UTC
         avail_endtime = int(datetime.strptime(avail_enddate, '%Y-%m-%d-%H').replace(tzinfo=timezone.utc).timestamp() ) # UNIX timestamp for available end time in UTC
         
-        avail_df = pd.read_csv(f_holder[0]) # load existing data
-        avail_df['time'] = pd.to_datetime(avail_df['time'])    
+        dtypes = {'time':'str', 'open':'float', 'high':'float', 'low':'float', 'close':'float'}
+        avail_df = pd.read_csv(f_holder[0], dtype=dtypes, parse_dates=['time'], index_col='time') # load existing data
     
         # adding both prior and latter time 
         if start_time < avail_starttime and end_time > avail_endtime:
@@ -98,12 +98,12 @@ def get_currency_data(currency, start_date, end_date=None):
         df = df[['time', 'open', 'high', 'low', 'close']]
         df = df[df['time']>=start_time] # removing datapoints earlier than start_time
         df['time'] = pd.to_datetime(df['time'], unit='s')
+        df.set_index('time', inplace=True)
         
         if f_holder != []: # merging with previously available data
+            avail_df = avail_df.loc[~avail_df.index.isin(df.index)]
             df = pd.concat([df, avail_df], axis = 0, sort=False)
         
-        df.drop_duplicates(inplace=True)
-        df.set_index('time', inplace=True) 
         df.sort_index(inplace=True, ascending=False)
         
         min_dt = min(df.index).strftime("%Y-%m-%d-%Hh")
